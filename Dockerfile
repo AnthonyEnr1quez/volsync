@@ -74,7 +74,7 @@ WORKDIR /workspace/syncthing
 # Make sure we have the correct Syncthing release
 RUN /bin/bash -c "[[ $(git rev-list -n 1 HEAD) == ${SYNCTHING_GIT_HASH} ]]"
 
-RUN go run build.go -no-upgrade
+RUN go run build.go -no-upgrade build
 
 
 ######################################################################
