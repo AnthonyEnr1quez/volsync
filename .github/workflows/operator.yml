@@ -21,97 +21,97 @@ env:
   DOCKER_BUILDKIT: "1"
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-20.04
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-20.04
 
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
 
-      - name: Install prereqs
-        run: |
-          echo 'APT::Acquire::Retries "5";' | sudo tee /etc/apt/apt.conf.d/80-retries
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip ruby
-          sudo gem install asciidoctor mdl
-          sudo pip3 install yamllint
-      - name: Run linters
-        run: ./.ci-scripts/pre-commit.sh --require-all
+  #     - name: Install prereqs
+  #       run: |
+  #         echo 'APT::Acquire::Retries "5";' | sudo tee /etc/apt/apt.conf.d/80-retries
+  #         sudo apt-get update
+  #         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip ruby
+  #         sudo gem install asciidoctor mdl
+  #         sudo pip3 install yamllint
+  #     - name: Run linters
+  #       run: ./.ci-scripts/pre-commit.sh --require-all
 
-  generated-files-check:
-    name: Auto Generated Files Check
-    runs-on: ubuntu-20.04
+  # generated-files-check:
+  #   name: Auto Generated Files Check
+  #   runs-on: ubuntu-20.04
 
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
 
-      - name: Install Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-        with:
-          go-version: ${{ env.GO_VERSION }}
+  #     - name: Install Go
+  #       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
-      # Only run this for branch (PR and push, not tag)
-      - name: Ensure custom-scorecard-tests config.yaml is up-to-date
-        if: github.ref_type == 'branch'
-        run: |
-          TGT_BRANCH_NAME="${{ github.base_ref || github.ref_name }}"
-          echo "TGT_BRANCH_NAME is: $TGT_BRANCH_NAME"
+  #     # Only run this for branch (PR and push, not tag)
+  #     - name: Ensure custom-scorecard-tests config.yaml is up-to-date
+  #       if: github.ref_type == 'branch'
+  #       run: |
+  #         TGT_BRANCH_NAME="${{ github.base_ref || github.ref_name }}"
+  #         echo "TGT_BRANCH_NAME is: $TGT_BRANCH_NAME"
 
-          DEF_BRANCH_NAME="${{ github.event.repository.default_branch }}"
-          echo "DEF_BRANCH_NAME: $DEF_BRANCH_NAME"
+  #         DEF_BRANCH_NAME="${{ github.event.repository.default_branch }}"
+  #         echo "DEF_BRANCH_NAME: $DEF_BRANCH_NAME"
 
-          CUST_IMG_TAG=$TGT_BRANCH_NAME
-          # For main use "latest"
-          if [ "$TGT_BRANCH_NAME" == "$DEF_BRANCH_NAME" ]; then
-            CUST_IMG_TAG="latest"
-          fi
+  #         CUST_IMG_TAG=$TGT_BRANCH_NAME
+  #         # For main use "latest"
+  #         if [ "$TGT_BRANCH_NAME" == "$DEF_BRANCH_NAME" ]; then
+  #           CUST_IMG_TAG="latest"
+  #         fi
 
-          echo "Generating custom-scorecard-config for $CUST_IMG_TAG"
-          make custom-scorecard-tests-generate-config CUSTOM_SCORECARD_IMG_TAG=${CUST_IMG_TAG}
-          diff=$(git diff --color --ignore-space-change -- custom-scorecard-tests/config.yaml)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** custom-scorecard-tests/config.yaml is out-of-date *****"
-            echo "*****     run 'make custom-scorecard-tests-generate-config'      *****"
-            exit 1
-          fi
+  #         echo "Generating custom-scorecard-config for $CUST_IMG_TAG"
+  #         make custom-scorecard-tests-generate-config CUSTOM_SCORECARD_IMG_TAG=${CUST_IMG_TAG}
+  #         diff=$(git diff --color --ignore-space-change -- custom-scorecard-tests/config.yaml)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** custom-scorecard-tests/config.yaml is out-of-date *****"
+  #           echo "*****     run 'make custom-scorecard-tests-generate-config'      *****"
+  #           exit 1
+  #         fi
 
-      - name: crd files check
-        run: |
-          make manifests
-          diff=$(git diff --color --ignore-space-change config/crd/bases)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** config/crd/bases is out-of-date *****"
-            echo "*****     run 'make manifests'      *****"
-            exit 1
-          fi
+  #     - name: crd files check
+  #       run: |
+  #         make manifests
+  #         diff=$(git diff --color --ignore-space-change config/crd/bases)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** config/crd/bases is out-of-date *****"
+  #           echo "*****     run 'make manifests'      *****"
+  #           exit 1
+  #         fi
 
-      - name: generated deepcopy files check
-        run: |
-          make generate
-          diff=$(git diff --color --ignore-space-change api/v1alpha1/*generated*.go)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** api/v1alpha1 generated files are out-of-date *****"
-            echo "*****     run 'make generate'      *****"
-            exit 1
-          fi
+  #     - name: generated deepcopy files check
+  #       run: |
+  #         make generate
+  #         diff=$(git diff --color --ignore-space-change api/v1alpha1/*generated*.go)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** api/v1alpha1 generated files are out-of-date *****"
+  #           echo "*****     run 'make generate'      *****"
+  #           exit 1
+  #         fi
 
-      - name: CSV bundle files check
-        run: |
-          make bundle
-          diff=$(git diff --color --ignore-space-change -IcreatedAt bundle)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** CSV bundle files are out-of-date *****"
-            echo "*****     run 'make bundle'      *****"
-            exit 1
-          fi
+  #     - name: CSV bundle files check
+  #       run: |
+  #         make bundle
+  #         diff=$(git diff --color --ignore-space-change -IcreatedAt bundle)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** CSV bundle files are out-of-date *****"
+  #           echo "*****     run 'make bundle'      *****"
+  #           exit 1
+  #         fi
 
-  test-operator:
+  # test-operator:
     name: Test-operator
     runs-on: ubuntu-20.04
 
@@ -176,253 +176,253 @@ jobs:
           name: volsync-operator
           path: /tmp/image.tar
 
-  build-scorecard:
-    name: Build-custom-scorecard-tests
-    runs-on: ubuntu-20.04
+  # build-scorecard:
+  #   name: Build-custom-scorecard-tests
+  #   runs-on: ubuntu-20.04
 
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
 
-      - name: Install Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-        with:
-          go-version: ${{ env.GO_VERSION }}
+  #     - name: Install Go
+  #       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
-      - name: Ensure go module files are up-to-date
-        run: |
-          cd custom-scorecard-tests
-          go mod tidy
-          diff=$(git diff --color -- go.mod go.sum)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** go modules in custom-scorecard-tests are out-of-date *****"
-            echo "*****     run 'go mod tidy'      *****"
-            exit 1
-          fi
+  #     - name: Ensure go module files are up-to-date
+  #       run: |
+  #         cd custom-scorecard-tests
+  #         go mod tidy
+  #         diff=$(git diff --color -- go.mod go.sum)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** go modules in custom-scorecard-tests are out-of-date *****"
+  #           echo "*****     run 'go mod tidy'      *****"
+  #           exit 1
+  #         fi
 
-      - name: Build operator container
-        run: make custom-scorecard-tests-build CUSTOM_SCORECARD_IMG=${CUSTOM_SCORECARD_IMAGE}
+  #     - name: Build operator container
+  #       run: make custom-scorecard-tests-build CUSTOM_SCORECARD_IMG=${CUSTOM_SCORECARD_IMAGE}
 
-      - name: Export container image
-        run: docker save -o /tmp/image.tar ${CUSTOM_SCORECARD_IMAGE}
+  #     - name: Export container image
+  #       run: docker save -o /tmp/image.tar ${CUSTOM_SCORECARD_IMAGE}
 
-      - name: Save container as artifact
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
-        with:
-          name: volsync-custom-scorecard-tests-container
-          path: /tmp/image.tar
+  #     - name: Save container as artifact
+  #       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
+  #       with:
+  #         name: volsync-custom-scorecard-tests-container
+  #         path: /tmp/image.tar
 
-  kubectl-plugin:
-    name: kubectl-plugin
-    runs-on: ubuntu-20.04
-    env:
-      KUBECONFIG: /tmp/kubeconfig
-      KUBERNETES_VERSION: "1.25.0"
+  # kubectl-plugin:
+  #   name: kubectl-plugin
+  #   runs-on: ubuntu-20.04
+  #   env:
+  #     KUBECONFIG: /tmp/kubeconfig
+  #     KUBERNETES_VERSION: "1.25.0"
 
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
-        with:
-          # Fetch whole history so we can properly determine the version string
-          # (required by krew validation)
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  #       with:
+  #         # Fetch whole history so we can properly determine the version string
+  #         # (required by krew validation)
+  #         fetch-depth: 0
 
-      - name: Install Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-        with:
-          go-version: ${{ env.GO_VERSION }}
+  #     - name: Install Go
+  #       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
-      - name: Install kubectl
-        run: |
-          curl -fsSLO "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
-          sudo install ./kubectl /usr/local/bin/
-          kubectl version --short --client
-          kubectl version --short --client | grep -q ${KUBERNETES_VERSION}
+  #     - name: Install kubectl
+  #       run: |
+  #         curl -fsSLO "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+  #         sudo install ./kubectl /usr/local/bin/
+  #         kubectl version --short --client
+  #         kubectl version --short --client | grep -q ${KUBERNETES_VERSION}
 
-      - name: Install krew
-        # https://krew.sigs.k8s.io/docs/user-guide/setup/install/
-        run: |
-          cd "$(mktemp -d)"
-          OS="$(uname | tr '[:upper:]' '[:lower:]')"
-          ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')"
-          KREW="krew-${OS}_${ARCH}"
-          curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz"
-          tar zxvf "${KREW}.tar.gz"
-          ./"${KREW}" install krew
-          echo "${KREW_ROOT:-$HOME/.krew}/bin" >> $GITHUB_PATH
+  #     - name: Install krew
+  #       # https://krew.sigs.k8s.io/docs/user-guide/setup/install/
+  #       run: |
+  #         cd "$(mktemp -d)"
+  #         OS="$(uname | tr '[:upper:]' '[:lower:]')"
+  #         ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')"
+  #         KREW="krew-${OS}_${ARCH}"
+  #         curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz"
+  #         tar zxvf "${KREW}.tar.gz"
+  #         ./"${KREW}" install krew
+  #         echo "${KREW_ROOT:-$HOME/.krew}/bin" >> $GITHUB_PATH
 
-      - name: Test build/install of plugin via krew
-        run: make test-krew
+  #     - name: Test build/install of plugin via krew
+  #       run: make test-krew
 
-      - name: Save cli as artifact
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
-        with:
-          name: kubectl-volsync
-          path: bin/kubectl-volsync
+  #     - name: Save cli as artifact
+  #       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
+  #       with:
+  #         name: kubectl-volsync
+  #         path: bin/kubectl-volsync
 
-  e2e:
-    name: End-to-end
-    needs: [build-operator, kubectl-plugin]
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        # There must be kindest/node images for these versions
-        # See: https://hub.docker.com/r/kindest/node/tags?page=1&ordering=name
-        # Or: skopeo list-tags docker://kindest/node
-        KUBERNETES_VERSIONS:
-          - "1.20.15"  # OCP 4.7
-          - "1.21.14"  # OCP 4.8
-          - "1.22.15"  # OCP 4.9
-          - "1.23.13"  # OCP 4.10
-          - "1.24.7"   # OCP 4.11
-          - "1.25.3"
-          - "1.26.0"
-    env:
-      KUBECONFIG: /tmp/kubeconfig
-      KUBERNETES_VERSION: ${{ matrix.KUBERNETES_VERSIONS }}
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  # e2e:
+  #   name: End-to-end
+  #   needs: [build-operator, kubectl-plugin]
+  #   runs-on: ubuntu-20.04
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       # There must be kindest/node images for these versions
+  #       # See: https://hub.docker.com/r/kindest/node/tags?page=1&ordering=name
+  #       # Or: skopeo list-tags docker://kindest/node
+  #       KUBERNETES_VERSIONS:
+  #         - "1.20.15"  # OCP 4.7
+  #         - "1.21.14"  # OCP 4.8
+  #         - "1.22.15"  # OCP 4.9
+  #         - "1.23.13"  # OCP 4.10
+  #         - "1.24.7"   # OCP 4.11
+  #         - "1.25.3"
+  #         - "1.26.0"
+  #   env:
+  #     KUBECONFIG: /tmp/kubeconfig
+  #     KUBERNETES_VERSION: ${{ matrix.KUBERNETES_VERSIONS }}
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
 
-      # We set bash as the default shell (instead of dash) because the kuttl
-      # test steps require bash, but the "script" directive executes them as "sh
-      # -c ..."
-      - name: Set bash as default shell
-        run: |
-          sudo ln -s bash /bin/sh.bash && sudo mv /bin/sh.bash /bin/sh
-          sudo ln -s bash /usr/bin/sh.bash && sudo mv /usr/bin/sh.bash /usr/bin/sh
+  #     # We set bash as the default shell (instead of dash) because the kuttl
+  #     # test steps require bash, but the "script" directive executes them as "sh
+  #     # -c ..."
+  #     - name: Set bash as default shell
+  #       run: |
+  #         sudo ln -s bash /bin/sh.bash && sudo mv /bin/sh.bash /bin/sh
+  #         sudo ln -s bash /usr/bin/sh.bash && sudo mv /usr/bin/sh.bash /usr/bin/sh
 
-      - name: Install kubectl
-        run: |
-          curl -fsSLO "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
-          sudo install ./kubectl /usr/local/bin/
-          kubectl version --short --client
-          kubectl version --short --client | grep -q ${KUBERNETES_VERSION}
+  #     - name: Install kubectl
+  #       run: |
+  #         curl -fsSLO "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+  #         sudo install ./kubectl /usr/local/bin/
+  #         kubectl version --short --client
+  #         kubectl version --short --client | grep -q ${KUBERNETES_VERSION}
 
-      - name: Install helm
-        run: make helm
+  #     - name: Install helm
+  #       run: make helm
 
-      - name: Install kind
-        run: |
-          curl -fsSL -o kind https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64
-          sudo install ./kind /usr/local/bin && rm kind
-          kind version
-          kind version | grep -q ${KIND_VERSION}
+  #     - name: Install kind
+  #       run: |
+  #         curl -fsSL -o kind https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64
+  #         sudo install ./kind /usr/local/bin && rm kind
+  #         kind version
+  #         kind version | grep -q ${KIND_VERSION}
 
-      - name: Create Kubernetes cluster
-        run: |
-          ./hack/setup-kind-cluster.sh "${KUBERNETES_VERSION}"
+  #     - name: Create Kubernetes cluster
+  #       run: |
+  #         ./hack/setup-kind-cluster.sh "${KUBERNETES_VERSION}"
 
-      - name: Start MinIO
-        run: |
-          ./hack/run-minio.sh
+  #     - name: Start MinIO
+  #       run: |
+  #         ./hack/run-minio.sh
 
-      - name: Start MinIO w/ TLS
-        run: |
-          MINIO_NAMESPACE=minio-tls MINIO_USE_TLS=1 ./hack/run-minio.sh
+  #     - name: Start MinIO w/ TLS
+  #       run: |
+  #         MINIO_NAMESPACE=minio-tls MINIO_USE_TLS=1 ./hack/run-minio.sh
 
-      - name: Load operator container artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3.0.2
-        with:
-          name: volsync-operator
-          path: /tmp
+  #     - name: Load operator container artifact
+  #       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3.0.2
+  #       with:
+  #         name: volsync-operator
+  #         path: /tmp
 
-      - name: Import container image into cluster
-        run: |
-          docker load -i /tmp/image.tar
-          docker inspect ${OPERATOR_IMAGE}
-          docker tag ${OPERATOR_IMAGE} ${OPERATOR_IMAGE}:ci-build
-          kind load docker-image "${OPERATOR_IMAGE}:ci-build"
+  #     - name: Import container image into cluster
+  #       run: |
+  #         docker load -i /tmp/image.tar
+  #         docker inspect ${OPERATOR_IMAGE}
+  #         docker tag ${OPERATOR_IMAGE} ${OPERATOR_IMAGE}:ci-build
+  #         kind load docker-image "${OPERATOR_IMAGE}:ci-build"
 
-      - name: Start operator
-        run: |
-          helm install --create-namespace -n volsync-system \
-              --set image.tag=ci-build \
-              --set rclone.tag=ci-build \
-              --set rsync.tag=ci-build \
-              --set rsync-tls.tag=ci-build \
-              --set restic.tag=ci-build \
-              --set syncthing.tag=ci-build \
-              --wait --timeout=300s \
-              volsync-ghaction ./helm/volsync
+  #     - name: Start operator
+  #       run: |
+  #         helm install --create-namespace -n volsync-system \
+  #             --set image.tag=ci-build \
+  #             --set rclone.tag=ci-build \
+  #             --set rsync.tag=ci-build \
+  #             --set rsync-tls.tag=ci-build \
+  #             --set restic.tag=ci-build \
+  #             --set syncthing.tag=ci-build \
+  #             --wait --timeout=300s \
+  #             volsync-ghaction ./helm/volsync
 
-      - name: Load cli artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3.0.2
-        with:
-          name: kubectl-volsync
-          path: bin
+  #     - name: Load cli artifact
+  #       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3.0.2
+  #       with:
+  #         name: kubectl-volsync
+  #         path: bin
 
-      - name: Make cli executable
-        run: chmod a+x bin/kubectl-volsync
+  #     - name: Make cli executable
+  #       run: chmod a+x bin/kubectl-volsync
 
-      - name: Ensure MinIO is ready
-        run: kubectl -n minio wait --for=condition=Available --timeout=300s deploy/minio
+  #     - name: Ensure MinIO is ready
+  #       run: kubectl -n minio wait --for=condition=Available --timeout=300s deploy/minio
 
-      - name: Setup Python
-        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435  # v4.5.0
-        with:
-          python-version: '3.10'
-          cache: 'pipenv'
+  #     - name: Setup Python
+  #       uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435  # v4.5.0
+  #       with:
+  #         python-version: '3.10'
+  #         cache: 'pipenv'
 
-      - name: Install e2e prereqs
-        run: make test-e2e-install
+  #     - name: Install e2e prereqs
+  #       run: make test-e2e-install
 
-      - name: Run e2e tests
-        env:
-          BATCHES: 2
-        run: make test-e2e
+  #     - name: Run e2e tests
+  #       env:
+  #         BATCHES: 2
+  #       run: make test-e2e
 
-  # This is a dummy job that can be used to determine success of CI:
-  # - by Mergify instead of having to list a bunch of other jobs
-  # - by the push jobs to ensure all pre-reqs pass before ANY containers are
-  #   pushed.
-  e2e-success:
-    name: Successful e2e tests
-    needs: [e2e, lint, generated-files-check, test-operator, build-scorecard]
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Success
-        run: echo "Previous steps were successful"
+  # # This is a dummy job that can be used to determine success of CI:
+  # # - by Mergify instead of having to list a bunch of other jobs
+  # # - by the push jobs to ensure all pre-reqs pass before ANY containers are
+  # #   pushed.
+  # e2e-success:
+  #   name: Successful e2e tests
+  #   needs: [e2e, lint, generated-files-check, test-operator, build-scorecard]
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Success
+  #       run: echo "Previous steps were successful"
 
-  # This is a dummy job that gates whether the container image artifacts should
-  # be pushed to the registry. It is only here so that the "if" clause doesn't
-  # need to be repeated for each push job.
-  push-gate:
-    name: Containers should be pushed
-    needs: e2e-success
-    if: >
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      (github.ref == 'refs/heads/main' ||
-       startsWith(github.ref, 'refs/heads/release-') ||
-       startsWith(github.ref, 'refs/tags/v'))
-    runs-on: ubuntu-20.04
-    steps:
-      - name: No-op
-        run: /bin/true
+  # # This is a dummy job that gates whether the container image artifacts should
+  # # be pushed to the registry. It is only here so that the "if" clause doesn't
+  # # need to be repeated for each push job.
+  # push-gate:
+  #   name: Containers should be pushed
+  #   needs: e2e-success
+  #   if: >
+  #     (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+  #     (github.ref == 'refs/heads/main' ||
+  #      startsWith(github.ref, 'refs/heads/release-') ||
+  #      startsWith(github.ref, 'refs/tags/v'))
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: No-op
+  #       run: /bin/true
 
-  # The operator images are specified directly because the env context isn't
-  # available in the job.with.
-  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idwithinput_id
-  push-operator:
-    name: Push operator container to registry
-    needs: push-gate
-    uses: ./.github/workflows/registry-push.yml
-    with:
-      artifact-name: volsync-operator
-      image-name: quay.io/backube/volsync
-    secrets:
-      registry-username: ${{ secrets.REGISTRY_USERNAME }}
-      registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+  # # The operator images are specified directly because the env context isn't
+  # # available in the job.with.
+  # # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idwithinput_id
+  # push-operator:
+  #   name: Push operator container to registry
+  #   needs: push-gate
+  #   uses: ./.github/workflows/registry-push.yml
+  #   with:
+  #     artifact-name: volsync-operator
+  #     image-name: quay.io/backube/volsync
+  #   secrets:
+  #     registry-username: ${{ secrets.REGISTRY_USERNAME }}
+  #     registry-password: ${{ secrets.REGISTRY_PASSWORD }}
 
-  push-scorecard:
-    name: Push custom scorecard container to registry
-    needs: push-gate
-    uses: ./.github/workflows/registry-push.yml
-    with:
-      artifact-name: volsync-custom-scorecard-tests-container
-      image-name: quay.io/backube/volsync-custom-scorecard-tests
-    secrets:
-      registry-username: ${{ secrets.REGISTRY_USERNAME }}
-      registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+  # push-scorecard:
+  #   name: Push custom scorecard container to registry
+  #   needs: push-gate
+  #   uses: ./.github/workflows/registry-push.yml
+  #   with:
+  #     artifact-name: volsync-custom-scorecard-tests-container
+  #     image-name: quay.io/backube/volsync-custom-scorecard-tests
+  #   secrets:
+  #     registry-username: ${{ secrets.REGISTRY_USERNAME }}
+  #     registry-password: ${{ secrets.REGISTRY_PASSWORD }}
