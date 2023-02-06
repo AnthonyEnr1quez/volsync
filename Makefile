@@ -167,7 +167,7 @@ run: manifests generate lint  ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build:  ## Build docker image with the manager.
-	docker buildx build --platform=linux/arm64,linux/amd64 --build-arg "builddate_arg=$(BUILDDATE)" --build-arg "version_arg=$(BUILD_VERSION)" -t ${IMG} .
+	docker build --build-arg "builddate_arg=$(BUILDDATE)" --build-arg "version_arg=$(BUILD_VERSION)" -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -181,12 +181,12 @@ docker-push: ## Push docker image with the manager.
 # To properly provided solutions that supports more than one platform you should use this option.
 PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 .PHONY: docker-buildx
-docker-buildx: test ## Build and push docker image for the manager for cross-platform support
+docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
 	- docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross
+	- docker buildx build --platform=$(PLATFORMS) --build-arg "builddate_arg=$(BUILDDATE)" --build-arg "version_arg=$(BUILD_VERSION)" -t ${IMG} -f Dockerfile.cross
 	- docker buildx rm project-v3-builder
 	rm Dockerfile.cross
 
