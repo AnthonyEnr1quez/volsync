@@ -67,11 +67,11 @@ IMG ?= quay.io/backube/volsync:latest
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 # https://github.com/golang/go/issues/57485
-# ifeq (,$(shell go env GOBIN))
-# GOBIN=$(shell go env GOPATH)/bin
-# else
-# GOBIN=$(shell go env GOBIN)
-# endif
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -184,13 +184,12 @@ PLATFORMS ?= linux/arm64,linux/amd64
 .PHONY: docker-buildx
 docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
-	sed -i.bak -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile
+	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
 	- docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	- docker buildx build --platform=$(PLATFORMS) --build-arg "builddate_arg=$(BUILDDATE)" --build-arg "version_arg=$(BUILD_VERSION)" --tag ${IMG} .
+	- docker buildx build --platform=$(PLATFORMS) --build-arg "builddate_arg=$(BUILDDATE)" --build-arg "version_arg=$(BUILD_VERSION)" -t ${IMG} -f Dockerfile.cross .
 	- docker buildx rm project-v3-builder
-	rm Dockerfile
-	mv Dockerfile.bak Dockerfile
+	rm Dockerfile.cross
 
 .PHONY: krew-plugin-manifest
 krew-plugin-manifest: yq bin/kubectl-volsync ## Build & package the kubectl plugin & update the krew manifest

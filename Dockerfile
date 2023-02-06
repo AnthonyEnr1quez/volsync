@@ -139,7 +139,7 @@ COPY /mover-rsync-tls/client.sh \
 RUN chmod a+rx /mover-rsync-tls/*.sh
 
 ##### syncthing
-COPY --from=syncthing-builder /workspace/syncthing/bin/syncthing /usr/local/bin/syncthing
+COPY --from=syncthing-builder /workspace/syncthing/syncthing /usr/local/bin/syncthing
 ENV SYNCTHING_DATA_TRANSFERMODE="sendreceive"
 COPY /mover-syncthing/config-template.xml \
      /mover-syncthing/
