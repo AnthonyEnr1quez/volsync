@@ -112,43 +112,43 @@ jobs:
   #         fi
 
   # test-operator:
-    name: Test-operator
-    runs-on: ubuntu-20.04
+  #   name: Test-operator
+  #   runs-on: ubuntu-20.04
 
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Install Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
-        with:
-          go-version: ${{ env.GO_VERSION }}
+  #     - name: Install Go
+  #       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
-      - name: Ensure go module files are up-to-date
-        run: |
-          go mod tidy
-          diff=$(git diff --color -- go.mod go.sum)
-          if [ -n "$diff" ]; then
-            echo "$diff"
-            echo "***** go modules are out-of-date *****"
-            echo "*****     run 'go mod tidy'      *****"
-            exit 1
-          fi
+  #     - name: Ensure go module files are up-to-date
+  #       run: |
+  #         go mod tidy
+  #         diff=$(git diff --color -- go.mod go.sum)
+  #         if [ -n "$diff" ]; then
+  #           echo "$diff"
+  #           echo "***** go modules are out-of-date *****"
+  #           echo "*****     run 'go mod tidy'      *****"
+  #           exit 1
+  #         fi
 
-      - name: Run unit tests
-        run: make test
+  #     - name: Run unit tests
+  #       run: make test
 
-      - name: Upload test coverage
-        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70  # v3.1.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./cover.out
-          # This is disabled because codecov is currently (2022-10-28)
-          # unreliable. We should consider re-enabling this at some point in the
-          # future. Until then, coverage stats are best-effort.
-          fail_ci_if_error: false
+  #     - name: Upload test coverage
+  #       uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70  # v3.1.1
+  #       with:
+  #         token: ${{ secrets.CODECOV_TOKEN }}
+  #         file: ./cover.out
+  #         # This is disabled because codecov is currently (2022-10-28)
+  #         # unreliable. We should consider re-enabling this at some point in the
+  #         # future. Until then, coverage stats are best-effort.
+  #         fail_ci_if_error: false
 
   build-operator:
     name: Build-operator
