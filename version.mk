@@ -21,7 +21,7 @@ HEAD_COMMIT ?= $(shell git rev-parse --short HEAD)
 DIRTY ?= $(shell git diff --quiet || echo '-dirty')
 BUILD_VERSION := v$(VERSION)+$(HEAD_COMMIT)$(DIRTY)
 
-BUILDDATE := $(shell date -u '+%Y-%m-%dT%H:%M:%S.%NZ')
+BUILDDATE := $(shell date '+%Y-%m-%dT%H:%M:%S.%NZ')
 
 # In the csv, the spec.replaces needs to be the full csv name of replacement (e.g. volsync.vX.Y.Z)
 # Or, if no REPLACES_VERSION, CSV_REPLACES_VERSION should not be set
