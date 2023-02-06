@@ -163,7 +163,7 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
- 
+
       - name: Build operator container
         run: make docker-buildx IMG=${OPERATOR_IMAGE}
 
