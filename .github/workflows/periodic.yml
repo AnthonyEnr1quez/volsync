@@ -17,9 +17,10 @@
 # periodically trigger workflows that run with each PR/Push.
 name: Periodic
 on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "15 4 * * 1"  # 4:15 every Monday
-  workflow_dispatch:  # Useful for testing, but not necessary
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "15 4 * * 1"  # 4:15 every Monday
+  # workflow_dispatch:  # Useful for testing, but not necessary
 
 jobs:
   trigger-workflows:

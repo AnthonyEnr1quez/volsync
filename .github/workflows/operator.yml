@@ -3,11 +3,11 @@
 
 name: operator
 on:  # yamllint disable-line rule:truthy
-  push:
-    branches: ["main", "release-*"]
-    tags: ["*"]
-  pull_request:
-    branches: ["main", "release-*"]
+  # push:
+  #   branches: ["main", "release-*"]
+  #   tags: ["*"]
+  # pull_request:
+  #   branches: ["main", "release-*"]
   # This workflow must be able to be triggered manually so that it can be
   # started from another workflow
   workflow_dispatch:

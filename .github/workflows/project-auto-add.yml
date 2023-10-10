@@ -4,10 +4,11 @@
 name: Automatically add issues to project tracking board
 
 on:  # yamllint disable-line rule:truthy
-  issues:
-    types:
-      - opened
-      - transferred
+  workflow_dispatch:
+  # issues:
+  #   types:
+  #     - opened
+  #     - transferred
 
 jobs:
   add-to-project:

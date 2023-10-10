@@ -2,9 +2,10 @@
 # yamllint disable rule:line-length
 
 name: Close stale issues/PRs
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "43 5 * * *"  # Daily @ 05:43
+on:
+  workflow_dispatch:  # yamllint disable-line rule:truthy
+  # schedule:
+  #   - cron: "43 5 * * *"  # Daily @ 05:43
 
 permissions:
   issues: write
