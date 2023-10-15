@@ -542,3 +542,7 @@ func (vh *VolumeHandler) IsCopyMethodDirect() bool {
 	return vh.copyMethod == volsyncv1alpha1.CopyMethodDirect ||
 		vh.copyMethod == volsyncv1alpha1.CopyMethodNone
 }
+
+func (vh *VolumeHandler) IsCopyMethodSnapshot() bool {
+	return vh.copyMethod == volsyncv1alpha1.CopyMethodSnapshot
+}

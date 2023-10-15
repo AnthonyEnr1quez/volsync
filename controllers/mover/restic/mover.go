@@ -439,6 +439,15 @@ func (m *Mover) ensureJob(ctx context.Context, cachePVC *corev1.PersistentVolume
 			podSpec.NodeSelector = affinity.NodeSelector
 			podSpec.Tolerations = affinity.Tolerations
 		}
+		if m.vh.IsCopyMethodSnapshot() {
+			podSpec.Tolerations = []corev1.Toleration{
+				{
+					Key: "plex",
+					Effect: corev1.TaintEffectNoSchedule,
+					Operator: corev1.TolerationOpExists,
+				},
+			}
+		}
 		if customCAObj != nil {
 			// Tell mover where to find the cert
 			podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, corev1.EnvVar{
